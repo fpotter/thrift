@@ -85,6 +85,9 @@ endif
 if THRIFT_GEN_cocoa
 thrift_SOURCES += src/generate/t_cocoa_generator.cc
 endif
+if THRIFT_GEN_cappuccino
+thrift_SOURCES += src/generate/t_cappuccino_generator.cc
+endif
 if THRIFT_GEN_st
 thrift_SOURCES += src/generate/t_st_generator.cc
 endif

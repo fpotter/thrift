@@ -172,6 +172,7 @@ bool gen_erl = false;
 bool gen_ocaml = false;
 bool gen_hs = false;
 bool gen_cocoa = false;
+bool gen_cappuccino = false;
 bool gen_csharp = false;
 bool gen_st = false;
 bool gen_recurse = false;
@@ -1119,6 +1120,10 @@ int main(int argc, char** argv) {
   if (gen_cocoa) {
     pwarning(1, "-cocoa is deprecated.  Use --gen cocoa");
     generator_strings.push_back("cocoa");
+  }
+  if (gen_cappuccino) {
+    pwarning(1, "-cappuccino is deprecated.  Use --gen cappuccino");
+    generator_strings.push_back("cappuccino");
   }
   if (gen_erl) {
     pwarning(1, "-erl is deprecated.  Use --gen erl");

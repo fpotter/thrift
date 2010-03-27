@@ -1,0 +1,30 @@
+var FILE = require("file"),
+    SYSTEM = require("system"),
+    OS = require("os"),
+    jake = require("jake"),
+    task = jake.task,
+    stream = require("term").stream;
+
+task ("install", function()
+{
+    print("Not implemented.");
+    OS.exit(1);
+})
+
+task ("test", function()
+{
+    print("Generating client from .thrift file...");
+    var code = OS.system("../../compiler/cpp/thrift -gen cappuccino ../../test/DebugProtoTest.thrift");
+    if (code != 0)
+    {
+        print("Couldn't run thrift.");
+        OS.exit(code);
+    }
+
+    var tests = new jake.FileList('Tests/**/*Test.j');
+    var cmd = ["ojtest"].concat(tests.items());
+
+    var code = OS.system(cmd.map(OS.enquote).join(" "));
+    if (code !== 0)
+        OS.exit(code);
+});

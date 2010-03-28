@@ -25,10 +25,12 @@
     {
         [CPException raise:CPInvalidArgumentException reason:"Asked to read " + length + " bytes, but only " + bytesAvailable + " bytes are available."];
     }
-    
-    for (var i = 0; i < length; i++)
+    else
     {
-        buffer[offset + i] = _bytes[_readPosition++];
+        for (var i = 0; i < length; i++)
+        {
+            buffer[offset + i] = _bytes[_readPosition++];
+        }
     }
 }
 
@@ -37,11 +39,14 @@
     if ((offset + length) > buffer.length)
     {
         [CPException raise:CPInvalidArgumentException reason:"(offset + length) == " + (offset + length) + " which is > bufffer.length of " + buffer.length];
+        return;
     }
-    
-    for (var i = 0; i < length; i++)
+    else
     {
-        [_bytes addObject:buffer[offset + i]];
+        for (var i = 0; i < length; i++)
+        {
+            [_bytes addObject:buffer[offset + i]];
+        }
     }
 }
 

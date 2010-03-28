@@ -274,9 +274,7 @@ var VERSION_MASK = 0xffff0000;
     }
 }
 
-- (void)writeMessageEnd
-{
-}
+- (void)writeMessageEnd {}
 
 - (CPArray)readMessageBeginReturningNameTypeSequenceID
 {
@@ -327,18 +325,14 @@ var VERSION_MASK = 0xffff0000;
     [self writeI32:size];
 }
 
-- (void)writeListEnd
-{
-}
+- (void)writeListEnd {}
 
 - (void)writeFieldStop
 {
     [self writeByte:TType_STOP];
 }
 
-- (void)writeFieldEnd
-{
-}
+- (void)writeFieldEnd {}
 
 - (void)readListBeginReturningElementTypeSize
 {
@@ -348,7 +342,47 @@ var VERSION_MASK = 0xffff0000;
     return [elementType, size];
 }
 
-- (void) readListEnd {}
+- (void)readListEnd {}
 
+- (void)writeSetBeginWithElementType:(int)elementType
+                                 size:(int)size
+{
+    [self writeByte:elementType];
+    [self writeI32:size];
+}
+
+- (void)writeSetEnd {}
+
+- (void)writeMapBeginWithKeyType:(int)keyType
+                        valueType:(int)valueType
+                             size:(int)size
+{
+    print("writeMapBeginWithKeyType: " + keyType + " valueType: " + valueType + " size: " + size);
+    [self writeByte:keyType];
+    [self writeByte:valueType];
+    [self writeI32:size];
+}
+
+- (void)writeMapEnd {}
+
+- (void) readMapBeginReturningKeyTypeValueTypeSize
+{
+    var keyType = [self readByte];
+    var valueType = [self readByte];
+    var size = [self readI32];
+    print("readMapBeginReturningKeyType: " + keyType + " valueType: " + valueType + " size: " + size);    
+    return [keyType, valueType, size];
+}
+
+- (void) readMapEnd {}
+
+- (void) readSetBeginReturningElementTypeSize
+{
+    var elementType = [self readByte];
+    var size = [self readI32];
+    return [elementType, size];
+}
+
+- (void) readSetEnd {}
 
 @end

@@ -719,7 +719,7 @@ void t_cappuccino_generator::generate_cappuccino_struct_implementation(ofstream 
                                                              bool is_exception,
                                                              bool is_result) {
   indent(out) <<
-    "@implementation " << cappuccino_prefix_ << tstruct->get_name() << endl;
+    "@implementation " << cappuccino_prefix_ << tstruct->get_name() << " : CPObject" << endl;
 
 //  out << "{" << endl;
   // output member variables
@@ -1323,7 +1323,7 @@ void t_cappuccino_generator::generate_cappuccino_service_server_interface(ofstre
  */
 void t_cappuccino_generator::generate_cappuccino_service_client_implementation(ofstream& out,
                                                                      t_service* tservice) {
-  out << "@implementation " << cappuccino_prefix_ << tservice->get_name() << "Client" << endl;
+  out << "@implementation " << cappuccino_prefix_ << tservice->get_name() << "Client" << " : CPObject" << endl;
 
   // initializers
   out << "- (id) initWithProtocol: (TProtocol) protocol" << endl;
@@ -1522,7 +1522,7 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
  */
 void t_cappuccino_generator::generate_cappuccino_service_server_implementation(ofstream& out,
                                                                      t_service* tservice) {
-  out << "@implementation " << cappuccino_prefix_ << tservice->get_name() << "Processor" << endl;
+  out << "@implementation " << cappuccino_prefix_ << tservice->get_name() << "Processor" << " : CPObject" << endl;
   indent_up();
   
   // initializer
@@ -1534,7 +1534,7 @@ void t_cappuccino_generator::generate_cappuccino_service_server_implementation(o
   out << indent() << "  return nil;" << endl;
   out << indent() << "}" << endl;
   out << indent() << "mService = [service retain];" << endl;
-  out << indent() << "mMethodMap = [[CPMutableDictionary dictionary] retain];" << endl;
+  out << indent() << "mMethodMap = [[CPDictionary dictionary] retain];" << endl;
   
   // generate method map for routing incoming calls
   vector<t_function*> functions = tservice->get_functions();
@@ -1760,9 +1760,10 @@ void t_cappuccino_generator::generate_deserialize_container(ofstream& out,
     indent(out)
       << "var " << mapBegin << " = " << "[inProtocol readMapBeginReturningKeyTypeValueTypeSize];" << endl;
     indent(out)
-      << size << " = " << mapBegin << "[1];" << endl;      
+      << size << " = " << mapBegin << "[2];" << endl;      
     indent(out) << "var " << fieldName <<
-      " = [[CPMutableDictionary alloc] initWithCapacity: " << size << "];" << endl;
+      " = [[CPDictionary alloc] init];" << endl;
+      // " = [[CPDictionary alloc] initWithCapacity: " << size << "];" << endl;      
   } else if (ttype->is_set()) {
     string setBegin = tmp("_setBegin");
     indent(out)
@@ -1770,7 +1771,8 @@ void t_cappuccino_generator::generate_deserialize_container(ofstream& out,
     indent(out)
       << size << " = " << setBegin << "[1];" << endl;
     indent(out) << "var " << fieldName <<
-      " = [[CPMutableSet alloc] initWithCapacity: " << size << "];" << endl;
+      " = [[CPSet alloc] init];" << endl;
+      // " = [[CPSet alloc] initWithCapacity: " << size << "];" << endl;      
   } else if (ttype->is_list()) {
     string listBegin = tmp("_listBegin");
     indent(out)
@@ -1778,7 +1780,7 @@ void t_cappuccino_generator::generate_deserialize_container(ofstream& out,
     indent(out)
       << size << " = " << listBegin << "[1];" << endl;
     indent(out) << "var " << fieldName <<
-      " = [[CPMutableArray alloc] initWithCapacity: " << size << "];" << endl;
+      " = [[CPArray alloc] initWithCapacity: " << size << "];" << endl;
   }
   // FIXME - the code above does not verify that the element types of
   // the containers being read match the element types of the
@@ -2054,7 +2056,7 @@ void t_cappuccino_generator::generate_serialize_container(ofstream& out,
   string key;
   if (ttype->is_map()) {
     key = tmp("key");
-    indent(out) << "var * " << iter << " = [" << fieldName << " keyEnumerator];" << endl;
+    indent(out) << "var " << iter << " = [" << fieldName << " keyEnumerator];" << endl;
     indent(out) << "var " << key << ";" << endl;
     indent(out) << "while ((" << key << " = [" << iter << " nextObject]))" << endl;
   } else if (ttype->is_set()) {

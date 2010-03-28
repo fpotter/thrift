@@ -35,7 +35,7 @@
     [super setUp];
     
     // Show pretty stack traces
-    objj_msgSend_decorate(objj_backtrace_decorator);
+//    objj_msgSend_decorate(objj_backtrace_decorator);
     
 }
 
@@ -416,10 +416,42 @@
     }
 }
 
+- (void)testCanReadAndWriteMap
+{
+    var buffer = [[TMemoryBuffer alloc] init];
+    var protocol = [[TBinaryProtocol alloc] initWithTransport:buffer];
+    
+    [protocol writeMapBeginWithKeyType:TType_STRING valueType:TType_I32 size:3];
+    
+    [protocol writeString:"one"];
+    [protocol writeI32:1];
+    [protocol writeString:"two"];
+    [protocol writeI32:2];
+    [protocol writeString:"three"];
+    [protocol writeI32:3];
+    
+    [protocol writeMapEnd];
+    
+    var mapBegin = [protocol readMapBeginReturningKeyTypeValueTypeSize];
+    [self assert:TType_STRING equals:mapBegin[0] message:"Key type should be string"];
+    [self assert:TType_I32 equals:mapBegin[1] message:"Value type should be I32"];
+    [self assert:3 equals:mapBegin[2] message:"Size should be 3"];
+    
+    [self assert:"one" equals:[protocol readString]];
+    [self assert:1 equals:[protocol readI32]];
+    [self assert:"two" equals:[protocol readString]];
+    [self assert:2 equals:[protocol readI32]];
+    [self assert:"three" equals:[protocol readString]];
+    [self assert:3 equals:[protocol readI32]];
+    
+    [protocol readMapEnd];
+}
+
 - (void)testSerialization
 {
     [self _testSerializationHelper:[OneOfEach class] instance:[self fixtureForOneOfEach]];
     [self _testSerializationHelper:[Nesting class] instance:[self fixtureForNesting]];
+    [self _testSerializationHelper:[HolyMoley class] instance:[self fixtureForHolyMoley]];
 }
 
 - (id)fixtureForOneOfEach
@@ -452,6 +484,64 @@
     var nesting = [[Nesting alloc] initWithMy_bonk:bonk my_ooe:[self fixtureForOneOfEach]];
     
     return nesting;
+}
+
+- (id)fixtureForHolyMoley
+{
+    var holyMoley = [[HolyMoley alloc] init];
+    [holyMoley setBig:[CPArray array]];
+    [[holyMoley big] addObject:[self fixtureForOneOfEach]];
+    [[holyMoley big] addObject:[[self fixtureForNesting] my_ooe]];
+        
+    [[[holyMoley big] objectAtIndex:0] setA_bite: 0x22];
+    [[[holyMoley big] objectAtIndex:1] setA_bite: 0x23];    
+
+    var contain = [CPSet set];
+    [holyMoley setContain:contain];
+    
+    var stage1 = [CPArray array];
+    [stage1 addObject:"and a one"];
+    [stage1 addObject:"and a two"];
+    [contain addObject:stage1];
+    
+    stage1 = [CPArray array];
+    [stage1 addObject:"and a one, two"];
+    [stage1 addObject:"three!"];
+    [stage1 addObject:"FOUR!!"];
+    [contain addObject:stage1];
+    stage1 = [CPArray array];
+    [contain addObject:stage1];
+    
+    var stage2 = [CPArray array];
+    var bonks = [CPDictionary dictionary];
+    [holyMoley setBonks:bonks];
+    [bonks setObject:stage2 forKey:"zero"];
+
+    stage2 = [CPArray array];
+    var b = [[Bonk alloc] init];
+    [b setType:1];
+    [b setMessage:"Wait."];
+    [stage2 addObject:b];
+    
+    b = [[Bonk alloc] init];
+    [b setType:2];
+    [b setMessage:"What?"];
+    [stage2 addObject:b];
+    [bonks setObject:stage2 forKey:"two"];
+
+    stage2 = [CPArray array];
+    b = [[Bonk alloc] init];
+    [b setType:3];
+    [b setMessage:"quoth"];
+    b = [[Bonk alloc] init];
+    [b setType:4];
+    [b setMessage:"the raven"];
+    b = [[Bonk alloc] init];
+    [b setType:5];
+    [b setMessage:"nevermore!"];
+    [bonks setObject:stage2 forKey:"three"];
+    
+    return holyMoley;
 }
 
 - (void)_testSerializationHelper:(Class)structClass instance:(id)instance

@@ -298,16 +298,11 @@ void t_cappuccino_generator::close_generator()
 }
 
 /**
- * Generates a typedef. This is just a simple 1-liner in objective-c
+ * Neither Objective-J nor Javascript give us any way to do typedefs.
  *
  * @param ttypedef The type definition
  */
-void t_cappuccino_generator::generate_typedef(t_typedef* ttypedef) {
-  // f_impl_ <<
-  //   indent() << "typedef " << type_name(ttypedef->get_type()) << " " << cappuccino_prefix_ << ttypedef->get_symbolic() << ";" << endl <<
-  //   endl;
-  f_impl_ << cappuccino_prefix_ << ttypedef->get_symbolic() << " = " << type_name(ttypedef->get_type()) << ";" << endl << endl;
-}
+void t_cappuccino_generator::generate_typedef(t_typedef* ttypedef) {}
 
 /**
  * Generates code for an enumerated type. In Objective-C, this is

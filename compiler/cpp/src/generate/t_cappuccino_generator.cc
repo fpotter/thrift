@@ -1560,7 +1560,7 @@ void t_cappuccino_generator::generate_cappuccino_service_server_implementation(o
     out << indent() << "var sig = [self methodSignatureForSelector: s];" << endl;
     out << indent() << "var invocation = [CPInvocation invocationWithMethodSignature: sig];" << endl;
     out << indent() << "[invocation setSelector: s];" << endl;
-    out << indent() << "[invocation retainArguments];" << endl;
+//    out << indent() << "[invocation retainArguments];" << endl;
     out << indent() << "[mMethodMap setValue: invocation forKey: @\"" << funname << "\"];" << endl;
     scope_down(out);
   }

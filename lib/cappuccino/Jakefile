@@ -14,7 +14,8 @@ task ("install", function()
 task ("test", function()
 {
     print("Generating client from .thrift file...");
-    var code = OS.system("../../compiler/cpp/thrift -gen cappuccino ../../test/DebugProtoTest.thrift");
+    //var code = OS.system("../../compiler/cpp/thrift -gen cappuccino DebugProtoTest.thrift");
+    var code = OS.system("../../compiler/cpp/thrift -gen cappuccino ../../test/DebugProtoTest.thrift");    
     if (code != 0)
     {
         print("Couldn't run thrift.");

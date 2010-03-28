@@ -26,6 +26,23 @@
 
 @end
 
+@implementation SrvHandler : CPObject
+{
+    int voidMethodCallCount;
+}
+
+- (int)JankyWithArg:(int)arg
+{
+    return arg * 2;
+}
+
+- (void)voidMethod
+{
+    voidMethodCallCount++;
+}
+
+@end
+
 @implementation TBinaryProtocolTest : OJTestCase
 {
 }
@@ -452,6 +469,36 @@
     [self _testSerializationHelper:[OneOfEach class] instance:[self fixtureForOneOfEach]];
     [self _testSerializationHelper:[Nesting class] instance:[self fixtureForNesting]];
     [self _testSerializationHelper:[HolyMoley class] instance:[self fixtureForHolyMoley]];
+}
+
+- (void)testServerRequest
+{
+    var clientOutBuffer = [[TMemoryBuffer alloc] init];
+    var clientOutProtocol = [[TBinaryProtocol alloc] initWithTransport:clientOutBuffer];
+    var clientInBuffer = [[TMemoryBuffer alloc] init];
+    var clientInProtocol = [[TBinaryProtocol alloc] initWithTransport:clientInBuffer];
+
+    var handler = [[SrvHandler alloc] init];
+    var testProcessor = [[SrvProcessor alloc] initWithSrv:handler];
+
+    var testClient = [[SrvClient alloc] initWithInProtocol:clientInProtocol outProtocol:clientOutProtocol];
+
+    [testClient send_JankyWithArg:4];
+    [testProcessor processOnInputProtocol:clientOutProtocol outputProtocol:clientInProtocol];
+    var result = [testClient recv_Janky];
+
+    [self assert:8 equals:result message:"Should get back twice the number we sent."];
+    
+    // Call the voidMethod which increments a counter.
+    [testClient send_voidMethod];
+    [testProcessor processOnInputProtocol:clientOutProtocol outputProtocol:clientInProtocol];
+    [testClient recv_voidMethod];
+    [self assert:1 equals:handler.voidMethodCallCount message:"Should have been called once."];
+    
+    [testClient send_voidMethod];
+    [testProcessor processOnInputProtocol:clientOutProtocol outputProtocol:clientInProtocol];
+    [testClient recv_voidMethod];
+    [self assert:2 equals:handler.voidMethodCallCount message:"Should have been called again."];
 }
 
 - (id)fixtureForOneOfEach

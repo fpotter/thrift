@@ -8,7 +8,7 @@ var VERSION_MASK = 0xffff0000;
 
 @implementation TBinaryProtocol : TProtocol
 {
-    TTransport _transport;
+    TTransport _transport @accessors(property=transport);
     BOOL _strictWrite;
     BOOL _strictRead;
     int _messageSizeLimit;
@@ -276,6 +276,8 @@ var VERSION_MASK = 0xffff0000;
 
 - (void)writeMessageEnd {}
 
+- (void)readMessageEnd {}
+
 - (CPArray)readMessageBeginReturningNameTypeSequenceID
 {
     var name,
@@ -357,7 +359,6 @@ var VERSION_MASK = 0xffff0000;
                         valueType:(int)valueType
                              size:(int)size
 {
-    print("writeMapBeginWithKeyType: " + keyType + " valueType: " + valueType + " size: " + size);
     [self writeByte:keyType];
     [self writeByte:valueType];
     [self writeI32:size];
@@ -370,7 +371,7 @@ var VERSION_MASK = 0xffff0000;
     var keyType = [self readByte];
     var valueType = [self readByte];
     var size = [self readI32];
-    print("readMapBeginReturningKeyType: " + keyType + " valueType: " + valueType + " size: " + size);    
+
     return [keyType, valueType, size];
 }
 

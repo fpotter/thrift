@@ -38,7 +38,7 @@
 */
 - (void)flush
 {
-    [CPException raise:CPUnsupportedMethodException reason:"Not implemented"];
+    //[CPException raise:CPUnsupportedMethodException reason:"Not implemented"];
 }
 
 @end

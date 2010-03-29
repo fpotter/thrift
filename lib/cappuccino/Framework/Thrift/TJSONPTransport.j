@@ -29,7 +29,7 @@ var DefaultTimeout = 5;
     var request = [CPURLRequest requestWithURL:url];
 
     _timeoutTimer = [CPTimer scheduledTimerWithTimeInterval:DefaultTimeout target:self selector:@selector(connectionTimedOut) userInfo:nil repeats:NO];
-    _activeConnection = [[CPJSONPConnection alloc] initWithRequest:request callback:"jsoncallback" delegate:self startImmediately:YES];
+    _activeConnection = [[CPJSONPConnection alloc] initWithRequest:request callback:"callback" delegate:self startImmediately:YES];
 }
 
 - (void)connection:(CPJSONPConnection)connection didReceiveData:(CPString)data

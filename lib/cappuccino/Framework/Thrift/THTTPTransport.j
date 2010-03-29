@@ -24,8 +24,6 @@
 
     var data = [CPURLConnection sendSynchronousRequest:request returningResponse:nil];
 
-    CPLog.info("in <<<< " + [data rawString]);
-
     [self setBufferContents:CFData.decodeBase64ToArray(unescape([data rawString]))];
 }
 

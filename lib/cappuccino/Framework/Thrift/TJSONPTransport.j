@@ -36,8 +36,6 @@ var DefaultTimeout = 5;
 {
     var error = nil;
 
-    CPLog.info("recevied data: '" + data + "'");
-
     if (data != nil && [data length] > 0)
     {
         try 

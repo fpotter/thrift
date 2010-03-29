@@ -180,7 +180,9 @@ class t_cappuccino_generator : public t_oop_generator {
   std::string declare_property(t_field* tfield);
   std::string dynamic_property(t_field* tfield);
   std::string function_signature(t_function* tfunction);
+  std::string async_function_signature(t_function* tfunction);
   std::string argument_list(t_struct* tstruct);
+  std::string async_argument_list(t_struct* tstruct);
   std::string type_to_enum(t_type* ttype);
   std::string format_string_for_type(t_type* type);
   std::string call_field_setter(t_field* tfield, std::string fieldName);
@@ -1480,13 +1482,8 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
       scope_down(out);
       out << endl;
     }
-
-    // Open function
-    indent(out) <<
-      "- " << function_signature(*f_iter) << endl;
-    scope_up(out);
-    indent(out) <<
-      "[self send_" << funname;
+    
+    string sendcall = "[self send_" + funname;
 
     // Declare the function arguments
     bool first = true;
@@ -1494,11 +1491,31 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
       if (first) {
         first = false;
       } else {
-        out << " ";
+        sendcall += " ";
       }
-      out << ": " << (*fld_iter)->get_name();
+      sendcall += ": " + (*fld_iter)->get_name();
     }
-    out << "];" << endl;
+    sendcall += "];";
+
+    // Open function
+    indent(out) <<
+      "- " << function_signature(*f_iter) << endl;
+    scope_up(out);
+    indent(out) << sendcall << endl;
+    
+    //   "[self send_" << funname;
+    // 
+    // // Declare the function arguments
+    // bool first = true;
+    // for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
+    //   if (first) {
+    //     first = false;
+    //   } else {
+    //     out << " ";
+    //   }
+    //   out << ": " << (*fld_iter)->get_name();
+    // }
+    // out << "];" << endl;
 
     if (!(*f_iter)->is_oneway()) {
       out << indent();
@@ -1508,6 +1525,50 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
       out <<
         "[self recv_" << funname << "];" << endl;
     }
+    scope_down(out);
+    out << endl;
+    
+    // Open function
+    indent(out) << "- " << async_function_signature(*f_iter) << endl;
+    scope_up(out);
+    out << indent() << "[[outProtocol transport] setRequestFinishedCallack:function(error)" << endl;
+    out << indent() << "{" << endl;
+    out << indent() << "  var result = nil;" << endl;
+        
+    out << indent() << "  if (error == nil)" << endl;
+    out << indent() << "  {" << endl;
+    out << indent() << "    try" << endl;
+    out << indent() << "    {" << endl;
+    out << indent() << "      result = [self recv_" << funname << "];" << endl;
+    out << indent() << "    }" << endl; 
+    out << indent() << "    catch (e)" << endl;
+    out << indent() << "    {" << endl;
+    out << indent() << "      error = e;" << endl;
+    out << indent() << "    }" << endl;
+    out << indent() << "  }" << endl;
+    out << indent() << "  if (error == nil)" << endl;
+    out << indent() << "  {" << endl;
+    out << indent() << "      [target performSelector:successAction withObject:self withObject:result];" << endl;
+    out << indent() << "  }" << endl;
+    out << indent() << "  else" << endl;
+    out << indent() << "  {" << endl;
+    out << indent() << "    [target performSelector:failureAction withObject:self withObject:error];" << endl;
+    out << indent() << "  }" << endl;
+    out << indent() << "}];" << endl;
+    out << indent()  << sendcall << endl;
+
+    // // Declare the function arguments
+    // bool first = true;
+    // for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
+    //   if (first) {
+    //     first = false;
+    //   } else {
+    //     out << " ";
+    //   }
+    //   out << ": " << (*fld_iter)->get_name();
+    // }
+    // out << "];" << endl;
+    
     scope_down(out);
     out << endl;
   }
@@ -2449,6 +2510,18 @@ string t_cappuccino_generator::function_signature(t_function* tfunction) {
   return result;
 }
 
+/**
+ * Renders a function signature with the async style
+ *
+ * @param tfunction Function definition
+ * @return String of rendered function definition
+ */
+string t_cappuccino_generator::async_function_signature(t_function* tfunction) {
+  t_type* ttype = tfunction->get_returntype();
+  std::string result =
+    "(" + type_name(ttype) + ") " + tfunction->get_name() + async_argument_list(tfunction->get_arglist());
+  return result;
+}
 
 /**
  * Renders a colon separated list of types and names, suitable for an
@@ -2475,6 +2548,38 @@ string t_cappuccino_generator::argument_list(t_struct* tstruct) {
   return result;
 }
 
+/**
+ * Renders a colon separated list of types and names, suitable for an
+ * objective-c parameter list.  Adds arguments for target, success action,
+ * and failure action for the async call format.
+ */
+string t_cappuccino_generator::async_argument_list(t_struct* tstruct) {
+  string result = "";
+
+  const vector<t_field*>& fields = tstruct->get_members();
+  vector<t_field*>::const_iterator f_iter;
+  bool first = true;
+  for (f_iter = fields.begin(); f_iter != fields.end(); ++f_iter) {
+    string argPrefix = "";
+    if (first) {
+      first = false;
+      argPrefix = "With" + capitalize((*f_iter)->get_name());
+    } else {
+      argPrefix = (*f_iter)->get_name();
+      result += " ";
+    }
+    result += argPrefix + ": (" + type_name((*f_iter)->get_type()) + ") " + (*f_iter)->get_name();
+    // result += ": (" + type_name((*f_iter)->get_type()) + ") " + (*f_iter)->get_name();
+  }
+  
+  if (first) {
+    result += "WithTarget: (id) target successAction: (SEL) successAction failureAction: (SEL) failureAction";
+  } else {
+    result += " target: (id) target successAction: (SEL) successAction failureAction: (SEL) failureAction";
+  }
+  
+  return result;
+}
 
 /**
  * Converts the parse type to an Objective-C enum string for the given type.

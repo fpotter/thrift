@@ -4,7 +4,6 @@
 
 @implementation TProtocolUtil : CPObject
 {
-    
 }
 
 + (void)skipType:(int)type onProtocol:(TProtocol) protocol
@@ -34,8 +33,9 @@
   case TType_STRUCT:
     [protocol readStructBeginReturningName];
     while (true) {
-      int fieldType;
-      [protocol readFieldBeginReturningNameTypeFieldID];
+      var fieldType;
+      var fieldBegin = [protocol readFieldBeginReturningNameTypeFieldID];
+      fieldType = fieldBegin[1];
       if (fieldType == TType_STOP) {
         break;
       }
@@ -46,11 +46,14 @@
     break;
   case TType_MAP:
   {
-    int keyType;
-    int valueType;
-    int size;
-    [protocol readMapBeginReturningKeyTypeValueTypeSize];
-    int i;
+    var keyType;
+    var valueType;
+    var size;
+    var mapBegin = [protocol readMapBeginReturningKeyTypeValueTypeSize];
+    keyType = mapBegin[0];
+    valueType = mapBegin[1];
+    size = mapBegin[2];
+    var i;
     for (i = 0; i < size; i++) {
       [TProtocolUtil skipType: keyType onProtocol: protocol];
       [TProtocolUtil skipType: valueType onProtocol: protocol];
@@ -60,10 +63,12 @@
     break;
     case TType_SET:
     {
-      int elemType;
-      int size;
-      [protocol readSetBeginReturningElementTypeSize];
-      int i;
+      var elemType;
+      var size;
+      var setBegin = [protocol readSetBeginReturningElementTypeSize];
+      elemType = setBegin[0];
+      size = setBegin[1];
+      var i;
       for (i = 0; i < size; i++) {
         [TProtocolUtil skipType: elemType onProtocol: protocol];
       }
@@ -72,10 +77,12 @@
       break;
     case TType_LIST:
     {
-      int elemType;
-      int size;
-      [protocol readListBeginReturningElementTypeSize];
-      int i;
+      var elemType;
+      var size;
+      var listBegin = [protocol readListBeginReturningElementTypeSize];
+      elemType = listBegin[0];
+      size = listBegin[1];
+      var i;
       for (i = 0; i < size; i++) {
         [TProtocolUtil skipType: elemType onProtocol: protocol];
       }

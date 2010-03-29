@@ -8,13 +8,25 @@
     int _readPosition;
 }
 
++ (TMemoryBuffer)memoryBufferFromBase64:(CPString)base64
+{
+    var buffer = [[TMemoryBuffer alloc] init];
+    buffer._bytes = CFData.decodeBase64ToArray(base64);
+    return buffer;
+}
+
 - (id)init {
     if (self = [super init])
     {
-        _bytes = [[CPMutableArray alloc] initWithCapacity:0];
-        _readPosition = 0;
+        [self setBufferContents:[CPArray array]];
     }
     return self;
+}
+
+- (void)setBufferContents:(CPArray)bytes
+{
+    _bytes = bytes;
+    _readPosition = 0;
 }
 
 - (int)readAll:(CPArray)buffer offset:(int)offset length:(int)length
@@ -39,7 +51,6 @@
     if ((offset + length) > buffer.length)
     {
         [CPException raise:CPInvalidArgumentException reason:"(offset + length) == " + (offset + length) + " which is > bufffer.length of " + buffer.length];
-        return;
     }
     else
     {

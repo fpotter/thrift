@@ -30,4 +30,14 @@
     [self assert:string equals:"TWFu" message:"Writing many bytes at once works."];
 }
 
+- (void)testCanRestoreMemoryBufferFromBase64
+{
+    var instance = [TMemoryBuffer memoryBufferFromBase64:"TWFu"];
+    
+    var bytes = [-1, -1, -1];
+    [instance readAll:bytes offset:0 length:3];
+    
+    [self assert:[77, 97, 110] equals:bytes message:"Should get back what we put in."];
+}
+
 @end

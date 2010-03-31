@@ -2,7 +2,7 @@
 @import <Foundation/Foundation.j>
 @import "TMemoryBuffer.j"
 
-var DefaultTimeout = 5;
+var DefaultTimeout = 30;
 
 @implementation TJSONPTransport : TMemoryBuffer
 {

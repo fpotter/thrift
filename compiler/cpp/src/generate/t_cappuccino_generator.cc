@@ -1203,8 +1203,8 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
       string resultname = function_result_helper_struct_type(*f_iter);
       out <<
         // indent() << cappuccino_prefix_ << resultname << " * result = [[[" << cappuccino_prefix_ <<
-        indent() << "var result = [[[" << cappuccino_prefix_ <<
-        resultname << " alloc] init] autorelease];" << endl;
+        indent() << "var result = [[" << cappuccino_prefix_ <<
+        resultname << " alloc] init];" << endl;
       indent(out) << "[result read: inProtocol];" << endl;
       indent(out) << "[inProtocol readMessageEnd];" << endl;
 
@@ -1362,7 +1362,7 @@ void t_cappuccino_generator::generate_cappuccino_service_server_implementation(o
   out << endl;
   out << indent() << "- ("<<cappuccino_prefix_ << tservice->get_name() << ") service" << endl;
   out << indent() << "{" << endl;
-  out << indent() << "  return [[mService retain] autorelease];" << endl;
+  out << indent() << "  return mService;" << endl;
   out << indent() << "}" << endl;
   
   // implementation of the TProcess method, which dispatches the incoming call using the method map
@@ -1623,7 +1623,6 @@ void t_cappuccino_generator::generate_deserialize_container(ofstream& out,
 string t_cappuccino_generator::containerize(t_type * ttype,
                                        string fieldName)
 {
-  // FIXME - optimize here to avoid autorelease pool?
   ttype = get_true_type(ttype);
   if (ttype->is_enum()) {
     return "[CPNumber numberWithInt: " + fieldName + "]";
@@ -1673,18 +1672,6 @@ void t_cappuccino_generator::generate_deserialize_map_element(ofstream& out,
   indent(out) <<
     "[" << fieldName << " setObject: " << containerize(valType, val) <<
     " forKey: " << containerize(keyType, key) << "];" << endl;
-
-  if (type_can_be_null(keyType)) {
-    if (!(get_true_type(keyType)->is_string())) {
-      indent(out) << "[" << containerize(keyType, key) << " release];" << endl;
-    }
-  }
-
-  if (type_can_be_null(valType)) {
-    if (!(get_true_type(valType)->is_string())) {
-      indent(out) << "[" << containerize(valType, val) << " release];" << endl;
-    }
-  }
 }
 
 /**
@@ -1701,13 +1688,6 @@ void t_cappuccino_generator::generate_deserialize_set_element(ofstream& out,
 
   indent(out) <<
     "[" << fieldName << " addObject: " << containerize(type, elem) << "];" << endl;
-
-  if (type_can_be_null(type)) {
-    // deserialized strings are autorelease, so don't release them
-    if (!(get_true_type(type)->is_string())) {
-      indent(out) << "[" << containerize(type, elem) << " release];" << endl;
-    }
-  }
 }
 
 /**
@@ -1724,12 +1704,6 @@ void t_cappuccino_generator::generate_deserialize_list_element(ofstream& out,
 
   indent(out) <<
     "[" << fieldName << " addObject: " << containerize(type, elem) << "];" << endl;
-
-  if (type_can_be_null(type)) {
-    if (!(get_true_type(type)->is_string())) {
-      indent(out) << "[" << containerize(type, elem) << " release];" << endl;
-    }
-  }
 }
 
 

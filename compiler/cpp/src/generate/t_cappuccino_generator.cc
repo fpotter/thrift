@@ -31,8 +31,8 @@ using namespace std;
 
 
 /**
- * Objective-J code generator.
- *
+ * Objective-J code generator.  This is a fork of Andrew McGeachie's work
+ * with some modifications to make things work under Cappuccino.
  */
 class t_cappuccino_generator : public t_oop_generator {
  public:
@@ -104,9 +104,7 @@ class t_cappuccino_generator : public t_oop_generator {
    */
 
   void generate_cappuccino_service_protocol (std::ofstream& out, t_service* tservice);
-  void generate_cappuccino_service_client_interface (std::ofstream& out, t_service* tservice);
   void generate_cappuccino_service_client_implementation (std::ofstream& out, t_service* tservice);
-  void generate_cappuccino_service_server_interface (std::ofstream& out, t_service* tservice);
   void generate_cappuccino_service_server_implementation (std::ofstream& out, t_service* tservice);
   void generate_cappuccino_service_helpers   (t_service* tservice);
   void generate_service_client    (t_service* tservice);
@@ -177,8 +175,6 @@ class t_cappuccino_generator : public t_oop_generator {
   std::string type_name(t_type* ttype, bool class_ref=false);
   std::string base_type_name(t_base_type* tbase);
   std::string declare_field(t_field* tfield);
-  std::string declare_property(t_field* tfield);
-  std::string dynamic_property(t_field* tfield);
   std::string function_signature(t_function* tfunction);
   std::string async_function_signature(t_function* tfunction);
   std::string argument_list(t_struct* tstruct);
@@ -224,20 +220,6 @@ void t_cappuccino_generator::init_generator() {
   MKDIR(get_out_dir().c_str());
   cappuccino_prefix_ = program_->get_namespace("cappuccino");
 
-  // // we have a .h header file...
-  // string f_header_name = program_name_+".h";
-  // string f_header_fullname = get_out_dir()+f_header_name;
-  // f_header_.open(f_header_fullname.c_str());
-  // 
-  // f_header_ <<
-  //   autogen_comment() <<
-  //   endl;
-  // 
-  // f_header_ <<
-  //   cappuccino_imports() <<
-  //   cappuccino_thrift_imports();
-
-  // ...and a .m implementation file
   string f_impl_name = get_out_dir()+program_name_+".j";
   f_impl_.open(f_impl_name.c_str());
 
@@ -248,7 +230,6 @@ void t_cappuccino_generator::init_generator() {
   f_impl_ <<
     cappuccino_imports() <<
     cappuccino_thrift_imports() <<
-//    "@import \"" << f_header_name << "\"" << endl <<
     endl;
 
 }
@@ -307,48 +288,26 @@ void t_cappuccino_generator::close_generator()
 void t_cappuccino_generator::generate_typedef(t_typedef* ttypedef) {}
 
 /**
- * Generates code for an enumerated type. In Objective-C, this is
- * essentially the same as the thrift definition itself, using the
- * enum keyword in Objective-C.  For namespace purposes, the name of
- * the enum plus an underscore is prefixed onto each element.
+ * Generates code for an enumerated type. In Objective-J, we don't have
+ * support for enums so we just write them out as global variables.
  *
  * @param tenum The enumeration
  */
 void t_cappuccino_generator::generate_enum(t_enum* tenum) {
-  // f_impl_ <<
-  //   indent() << "enum " << cappuccino_prefix_ << tenum->get_name() << " {" << endl;
-  // indent_up();
-
   f_impl_ << "// enum " << tenum->get_name() << endl;
   vector<t_enum_value*> constants = tenum->get_constants();
   vector<t_enum_value*>::iterator c_iter;
-//  bool first = true;
+
   int value = 0;
-  for (c_iter = constants.begin(); c_iter != constants.end(); ++c_iter) {
-    // if (first) {
-    //   first = false;
-    // } else {
-      // f_impl_ <<
-      //   ";" << endl;
-    // }
-    
+  for (c_iter = constants.begin(); c_iter != constants.end(); ++c_iter) {    
     if ((*c_iter)->has_value()) {
       value = (*c_iter)->get_value();
     }
     
     f_impl_ <<
       indent() << tenum->get_name() << "_" << (*c_iter)->get_name() << " = " << value << ";" << endl;
-    // if ((*c_iter)->has_value()) {
-    //   f_impl_ <<
-    //     " = " << (*c_iter)->get_value()
-    // }
   }
 
-  // indent_down();
-  // f_impl_ <<
-  //   endl <<
-  //   "};" << endl <<
-  //   endl;
   f_impl_ << endl;
 }
 
@@ -361,33 +320,16 @@ void t_cappuccino_generator::generate_consts(std::vector<t_const*> consts) {
   std::ostringstream const_interface;
   string constants_class_name = cappuccino_prefix_ + program_name_ + "Constants";
 
-  // const_interface << "@implementation " << constants_class_name << " : CPObject ";
-  // scope_up(const_interface);
-  // scope_down(const_interface);
-  // 
-  // // getter method for each constant defined.
   vector<t_const*>::iterator c_iter;
-  // for (c_iter = consts.begin(); c_iter != consts.end(); ++c_iter) {
-  //   string name = (*c_iter)->get_name();
-  //   t_type* type = (*c_iter)->get_type();
-  //   const_interface <<
-  //     "+ (" << type_name(type) << ") " << name << ";" << endl;
-  // }
-  // 
-  // const_interface << "@end";
 
   // this gets spit into the header file in ::close_generator
   constants_declarations_ = const_interface.str();
 
-  // static variables in the .m hold all constant values
+  // global variables in the .j hold all constant values
   for (c_iter = consts.begin(); c_iter != consts.end(); ++c_iter) {
     string name = (*c_iter)->get_name();
     t_type* type = (*c_iter)->get_type();
-    // f_impl_ <<
-    //   "static " << type_name(type) << " " << cappuccino_prefix_ << name;
-    // if (!type->is_container() && !type->is_struct()) {
-    //   f_impl_ << " = " << render_const_value(name, type, (*c_iter)->get_value());
-    // }
+
     f_impl_ <<
       cappuccino_prefix_ << name << " = ";
     if (!type->is_container() && !type->is_struct()) {
@@ -440,90 +382,17 @@ void t_cappuccino_generator::generate_consts(std::vector<t_const*> consts) {
  * @param tstruct The struct definition
  */
 void t_cappuccino_generator::generate_struct(t_struct* tstruct) {
-//  generate_cappuccino_struct_interface(f_header_, tstruct, false);
   generate_cappuccino_struct_implementation(f_impl_, tstruct, false);
 }
 
 /**
- * Exceptions are structs, but they inherit from NSException
+ * Exceptions are structs, but they inherit from CPException
  *
  * @param tstruct The struct definition
  */
 void t_cappuccino_generator::generate_xception(t_struct* txception) {
-//  generate_cappuccino_struct_interface(f_header_, txception, true);
   generate_cappuccino_struct_implementation(f_impl_, txception, true);
 }
-
-
-/**
- * Generate the interface for a struct
- *
- * @param tstruct The struct definition
- */
-// void t_cappuccino_generator::generate_cappuccino_struct_interface(ofstream &out,
-//                                                       t_struct* tstruct,
-//                                                       bool is_exception) {
-//   out << "@interface " << cappuccino_prefix_ << tstruct->get_name() << " : ";
-// 
-//   if (is_exception) {
-//     out << "CPException ";
-//   } else {
-//     out << "CPObject ";
-//   }
-//   out << "<CPCoding> ";
-// 
-//   scope_up(out);
-// 
-//   // members are protected.  this is redundant, but explicit.
-//   //  f_header_ << endl << "@protected:" << endl;
-// 
-//   const vector<t_field*>& members = tstruct->get_members();
-// 
-//   // member varialbes
-//   vector<t_field*>::const_iterator m_iter;
-//   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
-//     out << indent() << declare_field(*m_iter) << endl;
-//   }
-// 
-//   if (members.size() > 0) {
-//     out << endl;
-//     // isset fields
-//     for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
-//       indent(out) <<
-//         "BOOL __" << (*m_iter)->get_name() << "_isset;" <<  endl;
-//     }
-//   }
-// 
-//   scope_down(out);
-//   out << endl;
-// 
-//   // properties
-//   if (members.size() > 0) {
-//     out << "#if TARGET_OS_IPHONE || (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)" << endl;
-//     for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
-//       out << indent() << declare_property(*m_iter) << endl;
-//     }
-//     out << "#endif" << endl << endl;
-//   }
-// 
-//   // initializer for all fields
-//   if (!members.empty()) {
-//     generate_cappuccino_struct_initializer_signature(out, tstruct);
-//     out << ";" << endl;
-//   }
-//   out << endl;
-// 
-//   // read and write
-//   out << "- (void) read: (TProtocol) inProtocol;" << endl;
-//   out << "- (void) write: (TProtocol) outProtocol;" << endl;
-//   out << endl;
-// 
-//   // getters and setters
-//   generate_cappuccino_struct_field_accessor_declarations(out, tstruct, is_exception);
-// 
-//   out << "@end" << endl << endl;
-// }
-
 
 /**
  * Generate signature for initializer of struct with a parameter for
@@ -549,7 +418,6 @@ void t_cappuccino_generator::generate_cappuccino_struct_initializer_signature(of
   }
 }
 
-
 /**
  * Generate getter and setter declarations for all fields, plus an
  * IsSet getter.
@@ -566,7 +434,6 @@ void t_cappuccino_generator::generate_cappuccino_struct_field_accessor_declarati
     out << indent() << "- (BOOL) " << (*m_iter)->get_name() << "IsSet;" << endl << endl;
   }
 }
-
 
 /**
  * Generate the initWithCoder method for this struct so it's compatible with
@@ -718,7 +585,6 @@ void t_cappuccino_generator::generate_cappuccino_struct_implementation(ofstream 
   indent(out) <<
     "@implementation " << cappuccino_prefix_ << tstruct->get_name() << " : CPObject" << endl;
 
-//  out << "{" << endl;
   // output member variables
   scope_up(out);
 
@@ -740,8 +606,6 @@ void t_cappuccino_generator::generate_cappuccino_struct_implementation(ofstream 
   }
 
   scope_down(out);
-  //out << "}" << endl << endl;
-    
 
   // exceptions need to call the designated initializer on NSException
   if (is_exception) {
@@ -751,18 +615,6 @@ void t_cappuccino_generator::generate_cappuccino_struct_implementation(ofstream 
         "\" reason: @\"unknown\" userInfo: nil];" << endl;
     scope_down(out);
   }
-
-//  const vector<t_field*>& members = tstruct->get_members();
-//  vector<t_field*>::const_iterator m_iter;
-
-  // @dynamic property declarations
-//   if (!members.empty()) {
-// //    out << "#if TARGET_OS_IPHONE || (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5)" << endl;
-//     for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
-//       out << indent() << dynamic_property(*m_iter) << endl;
-//     }
-// //    out << "#endif" << endl << endl;
-//   }
 
   // initializer with all fields as params
   if (!members.empty()) {
@@ -795,23 +647,6 @@ void t_cappuccino_generator::generate_cappuccino_struct_implementation(ofstream 
   generate_cappuccino_struct_init_with_coder_method(out, tstruct, is_exception);
   // encodeWithCoder for NSCoding
   generate_cappuccino_struct_encode_with_coder_method(out, tstruct, is_exception);  
-
-  // dealloc
-  // if (!members.empty()) {
-  //   out << "- (void) dealloc" << endl;
-  //   scope_up(out);
-  // 
-  //   for (m_iter = members.begin(); m_iter != members.end(); ++m_iter) {
-  //     t_type* t = get_true_type((*m_iter)->get_type());
-  //     if (type_can_be_null(t)) {
-  //       indent(out) << "[__" << (*m_iter)->get_name() << " release];" << endl;
-  //     }
-  //   }
-  // 
-  //   out << indent() << "[super dealloc];" << endl;
-  //   scope_down(out);
-  //   out << endl;
-  // }
 
   // the rest of the methods
   generate_cappuccino_struct_field_accessor_implementations(out, tstruct, is_exception);
@@ -892,14 +727,6 @@ void t_cappuccino_generator::generate_cappuccino_struct_reader(ofstream& out,
 
         generate_deserialize_field(out, *f_iter, "fieldValue");
         indent(out) << call_field_setter(*f_iter, "fieldValue") << endl;
-        // // if this is an allocated field, release it since the struct
-        // // is now retaining it
-        // if (type_can_be_null((*f_iter)->get_type())) {
-        //   // deserialized strings are autorelease, so don't release them
-        //   if (!(get_true_type((*f_iter)->get_type())->is_string())) {
-        //     indent(out) << "[fieldValue release];" << endl;
-        //   }
-        // }
 
         indent_down();
         out << indent() << "} else { " << endl;
@@ -1089,11 +916,7 @@ void t_cappuccino_generator::generate_cappuccino_struct_field_accessor_implement
     indent(out) << "- (" << type_name(type) << ") ";
     out << field_name << " {" << endl;
     indent_up();
-//    if (!type_can_be_null(type)) {
-      indent(out) << "return __" << field_name << ";" << endl;
-    // } else {
-    //   indent(out) << "return [[__" << field_name << " retain] autorelease];" << endl;
-    // }
+    indent(out) << "return __" << field_name << ";" << endl;
     indent_down();
     indent(out) << "}" << endl << endl;
 
@@ -1101,13 +924,7 @@ void t_cappuccino_generator::generate_cappuccino_struct_field_accessor_implement
     indent(out) << "- (void) set" << cap_name << ": (" << type_name(type) <<
       ") " << field_name << " {" << endl;
     indent_up();
-    // if (!type_can_be_null(type)) {
-      indent(out) << "__" << field_name << " = " << field_name << ";" << endl;
-    // } else {
-    //   indent(out) << "[" << field_name << " retain];" << endl;
-    //   indent(out) << "[__" << field_name << " release];" << endl;
-    //   indent(out) << "__" << field_name << " = " << field_name << ";" << endl;
-    // }
+    indent(out) << "__" << field_name << " = " << field_name << ";" << endl;
     indent(out) << "__" << field_name << "_isset = YES;" << endl;
     indent_down();
     indent(out) << "}" << endl << endl;
@@ -1123,7 +940,6 @@ void t_cappuccino_generator::generate_cappuccino_struct_field_accessor_implement
     indent(out) << "- (void) unset" << cap_name << " {" << endl;
     indent_up();
     if (type_can_be_null(type)) {
-//      indent(out) << "[__" << field_name << " release];" << endl;
       indent(out) << "__" << field_name << " = nil;" << endl;
     }
     indent(out) << "__" << field_name << "_isset = NO;" << endl;
@@ -1178,9 +994,6 @@ void t_cappuccino_generator::generate_cappuccino_struct_description(ofstream& ou
  * @param tservice The service definition
  */
 void t_cappuccino_generator::generate_service(t_service* tservice) {
-//  generate_cappuccino_service_protocol(f_header_, tservice);
-//  generate_cappuccino_service_client_interface(f_header_, tservice);
-//  generate_cappuccino_service_server_interface(f_header_, tservice);
   generate_cappuccino_service_helpers(tservice);
   generate_cappuccino_service_client_implementation(f_impl_, tservice);
   generate_cappuccino_service_server_implementation(f_impl_, tservice);
@@ -1197,7 +1010,6 @@ void t_cappuccino_generator::generate_cappuccino_service_helpers(t_service* tser
   vector<t_function*>::iterator f_iter;
   for (f_iter = functions.begin(); f_iter != functions.end(); ++f_iter) {
     t_struct* ts = (*f_iter)->get_arglist();
-//    generate_cappuccino_struct_interface(f_impl_, ts, false);
     generate_cappuccino_struct_implementation(f_impl_, ts, false, false);  
     generate_function_helpers(*f_iter);
   }
@@ -1239,7 +1051,6 @@ void t_cappuccino_generator::generate_function_helpers(t_function* tfunction) {
   }
 
   // generate the result struct
-//  generate_cappuccino_struct_interface(f_impl_, &result, false);
   generate_cappuccino_struct_implementation(f_impl_, &result, false, true);  
 }
 
@@ -1268,50 +1079,6 @@ void t_cappuccino_generator::generate_cappuccino_service_protocol(ofstream& out,
   }
   out << "@end" << endl << endl;
 }
-
-
-/**
- * Generates a service client interface definition.
- *
- * @param tservice The service to generate a client interface definition for
- */
-void t_cappuccino_generator::generate_cappuccino_service_client_interface(ofstream& out,
-                                                                t_service* tservice) {
-//   out << "@interface " << cappuccino_prefix_ << tservice->get_name() << "Client : CPObject <" <<
-//     cappuccino_prefix_ << tservice->get_name() << "> ";
-// 
-//   scope_up(out);
-//   out << indent() << "id <TProtocol> inProtocol;" << endl;
-//   out << indent() << "id <TProtocol> outProtocol;" << endl;
-//   scope_down(out);
-// 
-//   out << "- (id) initWithProtocol: (TProtocol) protocol;" << endl;
-//   out << "- (id) initWithInProtocol: (TProtocol) inProtocol outProtocol: (TProtocol) outProtocol;" << endl;
-//   out << "@end" << endl << endl;
-}
-
-
-/**
- * Generates a service server interface definition. In other words, the TProcess implementation for the
- * service definition.
- *
- * @param tservice The service to generate a client interface definition for
- */
-void t_cappuccino_generator::generate_cappuccino_service_server_interface(ofstream& out,
-                                                                t_service* tservice) {
-  // out << "@interface " << cappuccino_prefix_ << tservice->get_name() << "Processor : CPObject <TProcessor> ";
-  // 
-  // scope_up(out);
-  // out << indent() << "id <" << cappuccino_prefix_ << tservice->get_name() <<"> mService;" << endl;
-  // out << indent() << "CPDictionary mMethodMap;" << endl;
-  // scope_down(out);
-  // 
-  // out << "- (id) initWith" << tservice->get_name() << ": (id <" << cappuccino_prefix_ << tservice->get_name() << ">) service;" << endl;
-  // out << "- (id<"<<cappuccino_prefix_ << tservice->get_name() << ">) service;" << endl;
-  // 
-  // out << "@end" << endl << endl;
-}
-
 
 /**
  * Generates a service client implementation.
@@ -1343,15 +1110,6 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
   out << indent() << "return self;" << endl;
   scope_down(out);
   out << endl;
-
-  // // dealloc
-  // out << "- (void) dealloc" << endl;
-  // scope_up(out);
-  // out << indent() << "[inProtocol release];" << endl;
-  // out << indent() << "[outProtocol release];" << endl;
-  // out << indent() << "[super dealloc];" << endl;
-  // scope_down(out);
-  // out << endl;
 
   // generate client method implementations
   vector<t_function*> functions = tservice->get_functions();
@@ -1483,6 +1241,8 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
       out << endl;
     }
     
+    // Generate the call to our send method.  We'll use this once for our synchronous
+    // version and once for the async version.
     string sendcall = "[self send_" + funname;
 
     // Declare the function arguments
@@ -1503,20 +1263,6 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
     scope_up(out);
     indent(out) << sendcall << endl;
     
-    //   "[self send_" << funname;
-    // 
-    // // Declare the function arguments
-    // bool first = true;
-    // for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
-    //   if (first) {
-    //     first = false;
-    //   } else {
-    //     out << " ";
-    //   }
-    //   out << ": " << (*fld_iter)->get_name();
-    // }
-    // out << "];" << endl;
-
     if (!(*f_iter)->is_oneway()) {
       out << indent();
       if (!(*f_iter)->get_returntype()->is_void()) {
@@ -1557,18 +1303,6 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
     out << indent() << "}];" << endl;
     out << indent()  << sendcall << endl;
 
-    // // Declare the function arguments
-    // bool first = true;
-    // for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
-    //   if (first) {
-    //     first = false;
-    //   } else {
-    //     out << " ";
-    //   }
-    //   out << ": " << (*fld_iter)->get_name();
-    // }
-    // out << "];" << endl;
-    
     scope_down(out);
     out << endl;
   }
@@ -1717,22 +1451,10 @@ void t_cappuccino_generator::generate_cappuccino_service_server_implementation(o
     out << indent() << "[result write: outProtocol];" << endl;
     out << indent() << "[outProtocol writeMessageEnd];" << endl;
     out << indent() << "[[outProtocol transport] flush];" << endl;
-    // out << indent() << "[result release];" << endl;
-    // out << indent() << "[args release];" << endl;
-    
+
     scope_down(out);
   }
   
-  // dealloc
-  // out << endl;
-  // out << "- (void) dealloc" << endl;
-  // scope_up(out);
-  // out << indent() << "[mService release];" << endl;
-  // out << indent() << "[mMethodMap release];" << endl;
-  // out << indent() << "[super dealloc];" << endl;
-  // scope_down(out);
-  // out << endl;
-
   indent_down();
 
   out << "@end" << endl << endl;
@@ -1763,7 +1485,6 @@ void t_cappuccino_generator::generate_deserialize_field(ofstream& out,
     generate_deserialize_container(out, type, fieldName);
   } else if (type->is_base_type() || type->is_enum()) {
     indent(out) <<
-      // type_name(type) << " " << fieldName << " = [inProtocol ";
       "var" << " " << fieldName << " = [inProtocol ";      
 
     if (type->is_base_type()) {
@@ -1842,7 +1563,6 @@ void t_cappuccino_generator::generate_deserialize_container(ofstream& out,
       << size << " = " << mapBegin << "[2];" << endl;      
     indent(out) << "var " << fieldName <<
       " = [[CPDictionary alloc] init];" << endl;
-      // " = [[CPDictionary alloc] initWithCapacity: " << size << "];" << endl;      
   } else if (ttype->is_set()) {
     string setBegin = tmp("_setBegin");
     indent(out)
@@ -1851,7 +1571,6 @@ void t_cappuccino_generator::generate_deserialize_container(ofstream& out,
       << size << " = " << setBegin << "[1];" << endl;
     indent(out) << "var " << fieldName <<
       " = [[CPSet alloc] init];" << endl;
-      // " = [[CPSet alloc] initWithCapacity: " << size << "];" << endl;      
   } else if (ttype->is_list()) {
     string listBegin = tmp("_listBegin");
     indent(out)
@@ -2281,9 +2000,6 @@ string t_cappuccino_generator::type_name(t_type* ttype, bool class_ref) {
     }
   }
 
-  // if (!class_ref) {
-  //   result += " *";
-  // }
   return result;
 }
 
@@ -2467,34 +2183,6 @@ string t_cappuccino_generator::render_const_value(string name,
  */
 string t_cappuccino_generator::declare_field(t_field* tfield) {
   return type_name(tfield->get_type()) + " __" + tfield->get_name() + ";";
-}
-
-/**
- * Declares an Objective-C 2.0 property.
- *
- * @param tfield The field to declare a property for
- */
-string t_cappuccino_generator::declare_property(t_field* tfield) {
-  std::ostringstream render;
-  render << "@property (nonatomic, ";
-
-  if (type_can_be_null(tfield->get_type()))
-    render << "retain, ";
-  
-  render << "getter=" << decapitalize(tfield->get_name()) <<
-    ", setter=set" << capitalize(tfield->get_name()) + ":) " <<
-    type_name(tfield->get_type()) << " " << tfield->get_name() << ";";
-
-  return render.str();
-}
-
-/**
- * Add @dynamic declaration for an Objective-C 2.0 property.
- *
- * @param tfield The field for which to declare a dynamic property
- */
-string t_cappuccino_generator::dynamic_property(t_field* tfield) {
-  return "@dynamic " + tfield->get_name() + ";";
 }
 
 /**

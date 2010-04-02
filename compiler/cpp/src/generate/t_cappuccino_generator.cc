@@ -1250,10 +1250,10 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
     for (fld_iter = fields.begin(); fld_iter != fields.end(); ++fld_iter) {
       if (first) {
         first = false;
+        sendcall += "With" + capitalize((*fld_iter)->get_name()) + ": " + (*fld_iter)->get_name() + " ";
       } else {
-        sendcall += " ";
+        sendcall += (*fld_iter)->get_name() + ": " + (*fld_iter)->get_name();
       }
-      sendcall += ": " + (*fld_iter)->get_name();
     }
     sendcall += "];";
 

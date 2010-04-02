@@ -86,7 +86,7 @@ var DefaultTimeout = 30;
     }
     else
     {
-        [CPException raise:CPInternalInconsistencyException reason:"Got result from Thrift server but no callback function was set." userInfo:nil];
+        [CPException raise:CPInternalInconsistencyException reason:"Got result from Thrift server but no callback function was set."];
     }
     _requestFinishedCallback = nil;
 }

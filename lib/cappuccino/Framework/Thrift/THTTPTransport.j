@@ -17,7 +17,8 @@
 
 - (void)flush
 {
-    var url = [CPString stringWithFormat:"%@", _URL];
+    // Appending base64=true tells the server that we wish to encode everything in Base64
+    var url = [CPString stringWithFormat:"%@?base64=true", _URL];
     var request = [CPURLRequest requestWithURL:url];
     [request setHTTPMethod:"POST"];
     [request setHTTPBody:[self contentsAsBase64]];

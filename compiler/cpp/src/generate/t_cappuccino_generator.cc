@@ -1252,7 +1252,7 @@ void t_cappuccino_generator::generate_cappuccino_service_client_implementation(o
         first = false;
         sendcall += "With" + capitalize((*fld_iter)->get_name()) + ": " + (*fld_iter)->get_name() + " ";
       } else {
-        sendcall += (*fld_iter)->get_name() + ": " + (*fld_iter)->get_name();
+        sendcall += (*fld_iter)->get_name() + ": " + (*fld_iter)->get_name() + " ";
       }
     }
     sendcall += "];";

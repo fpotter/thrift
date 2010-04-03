@@ -73,7 +73,7 @@ var DefaultTimeout = 30;
         var url = [CPString stringWithFormat:"%@?body=%@", _URL, escape(body)];
         var request = [CPURLRequest requestWithURL:url];
     
-        CPLog.info(_URL + " >>> " + body);    
+        CPLog.info("TJSONPTransport: Sent " + body.length + " bytes to " + _URL);
 
         _timeoutTimer = [CPTimer scheduledTimerWithTimeInterval:DefaultTimeout target:self selector:@selector(connectionTimedOut) userInfo:nil repeats:NO];
         _activeConnection = [[CPJSONPConnection alloc] initWithRequest:request callback:"callback" delegate:self startImmediately:YES];
@@ -83,7 +83,8 @@ var DefaultTimeout = 30;
 - (void)connection:(CPJSONPConnection)connection didReceiveData:(CPString)data
 {
     var error = nil;
-    CPLog.info(_URL + " <<< " + data);
+
+    CPLog.info("TJSONPTransport: Received " + data.length + " bytes from " + _URL);
 
     if (data != nil && [data length] > 0)
     {

@@ -1,7 +1,12 @@
 
 @import <Foundation/Foundation.j>
 
-@implementation TException : CPException
+@implementation TException : CPObject
+{
+    CPString _name @accessors(property = name);
+    CPString _reason @accessors(property = reason);
+    CPDictionary _userInfo @accessors(property = userInfo);
+}
 
 + (id) exceptionWithName: (CPString) aName
 {
@@ -30,6 +35,16 @@
                            userInfo: anError];
 }
 
+- (id)initWithName:name reason:reason userInfo:userInfo
+{
+    if (self = [super init])
+    {
+        _name = name;
+        _reason = reason;
+        _userInfo = userInfo;
+    }
+    return self;
+}
 
 - (CPString) description
 {

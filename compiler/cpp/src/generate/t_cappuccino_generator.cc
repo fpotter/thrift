@@ -253,10 +253,7 @@ string t_cappuccino_generator::cappuccino_imports() {
  */
 string t_cappuccino_generator::cappuccino_thrift_imports() {
   string result = string() +
-    // "@import <TProtocol.j>\n" +
-    // "@import <TApplicationException.j>\n" +
-    // "@import <TProtocolUtil.j>\n" +
-    // "@import <TProcessor.j>\n" +
+    "@import <Thrift/Thrift.j>\n" +
     "\n";
 
   // Include other Thrift includes
@@ -583,7 +580,7 @@ void t_cappuccino_generator::generate_cappuccino_struct_implementation(ofstream 
                                                              bool is_exception,
                                                              bool is_result) {
   indent(out) <<
-    "@implementation " << cappuccino_prefix_ << tstruct->get_name() << " : CPObject" << endl;
+    "@implementation " << cappuccino_prefix_ << tstruct->get_name() << " : " << (is_exception ? "TException" : "CPObject")  << endl;
 
   // output member variables
   scope_up(out);

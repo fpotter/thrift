@@ -3,6 +3,21 @@
 
 var DefaultTimeout = 30;
 
+function URLSafeBase64EncodeArray(arr)
+{
+    var str = CFData.encodeBase64Array(arr);
+    str = [str stringByReplacingOccurrencesOfString:"+" withString:"-"];
+    str = [str stringByReplacingOccurrencesOfString:"/" withString:"_"];
+    return str;
+}
+
+function URLSafeBase64DecodeToArray(str)
+{
+    str = [str stringByReplacingOccurrencesOfString:"-" withString:"+"];
+    str = [str stringByReplacingOccurrencesOfString:"_" withString:"/"];
+    return CFData.decodeBase64ToArray(str);
+}
+
 @implementation TJSONPTransport : TTransport
 {
     CPString _URL;
@@ -67,12 +82,12 @@ var DefaultTimeout = 30;
     }
     else
     {    
-        var body = CFData.encodeBase64Array(_requestData);
+        var body = URLSafeBase64EncodeArray(_requestData);
         _requestData = [];
 
-        var url = [CPString stringWithFormat:"%@?body=%@", _URL, escape(body)];
+        var url = [CPString stringWithFormat:"%@?body=%@", _URL, body];
         var request = [CPURLRequest requestWithURL:url];
-    
+
         CPLog.info("TJSONPTransport: Sent " + body.length + " bytes to " + _URL);
 
         _timeoutTimer = [CPTimer scheduledTimerWithTimeInterval:DefaultTimeout target:self selector:@selector(connectionTimedOut) userInfo:nil repeats:NO];
@@ -91,7 +106,7 @@ var DefaultTimeout = 30;
         try 
         {
             _responsePosition = 0;
-            _responseData = CFData.decodeBase64ToArray(unescape(data));
+            _responseData = URLSafeBase64DecodeToArray(data);
         }
         catch (e)
         {

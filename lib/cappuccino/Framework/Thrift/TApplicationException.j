@@ -53,7 +53,7 @@ TApplicationException_MISSING_RESULT = 5;
     var fieldType;
     var fieldID;
 
-    [protocol readStructBeginReturningName: NULL];
+    [protocol readStructBeginReturningName];
 
     while (true) {
         var fieldBegin = [protocol readFieldBeginReturningNameTypeFieldID];

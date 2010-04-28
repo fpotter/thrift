@@ -85,6 +85,9 @@ function URLSafeBase64DecodeToArray(str)
         var body = URLSafeBase64EncodeArray(_requestData);
         _requestData = [];
 
+        var separator = (_URL.indexOf('?') < 0) ? "?" : "&";
+        var url = _URL + separator + "body=" + body;
+        
         var url = [CPString stringWithFormat:"%@?body=%@", _URL, body];
         var request = [CPURLRequest requestWithURL:url];
 

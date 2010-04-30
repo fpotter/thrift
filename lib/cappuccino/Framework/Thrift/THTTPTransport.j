@@ -18,7 +18,7 @@ function URLSafeBase64DecodeToArray(str)
     return CFData.decodeBase64ToArray(str);
 }
 
-@implementation TJSONPTransport : TTransport
+@implementation THTTPTransport : TTransport
 {
     CPString _URL;
     Function _requestFinishedCallback;
@@ -27,8 +27,11 @@ function URLSafeBase64DecodeToArray(str)
     CPArray _responseData;
     int _responsePosition;
     
-    CPJSONPConnection _activeConnection;
+    id _activeConnection;
     CPTimer _timeoutTimer;
+    
+    BOOL _JSONPEnabled;
+    int _connectionTimeout;
 }
 
 - (id)initWithURL:(CPString)URL {
@@ -38,8 +41,39 @@ function URLSafeBase64DecodeToArray(str)
         _requestData = [];
         _responseData = [];
         _responsePosition = 0;
+        
+        _JSONPEnabled = NO;
+        _connectionTimeout = 30;
     }
     return self;
+}
+
+/*!
+    If set to YES, the request will following the JSONP pattern.  It will be an HTTP GET and
+    the request body will be appending with body=<url-safe-base64 encoded body> and there will be
+    a 'callback' parameter specifying the JS function to be called.
+    
+    If set to NO, the request will be an HTTP POST with the request body enoded as url-safe-base64.
+    There will be an added 'base64=true' parameter so the server knows the format.
+*/
+- (void)setJSONPEnabled:(BOOL)JSONPEnabled
+{
+    _JSONPEnabled = JSONPEnabled;
+}
+
+- (BOOL)JSONPEnabled
+{
+    return _JSONPEnabled;
+}
+
+- (void)setConnectionTimeout:(int)seconds
+{
+    _connectionTimeout = seconds;
+}
+
+- (int)connectionTimeout
+{
+    return _connectionTimeout;
 }
 
 - (int)readAll:(CPArray)buffer offset:(int)offset length:(int)length
@@ -84,24 +118,35 @@ function URLSafeBase64DecodeToArray(str)
     {    
         var body = URLSafeBase64EncodeArray(_requestData);
         _requestData = [];
-
+        
         var separator = (_URL.indexOf('?') < 0) ? "?" : "&";
-        var url = _URL + separator + "body=" + body;
-
-        var request = [CPURLRequest requestWithURL:url];
-
-        CPLog.info("TJSONPTransport: Sent " + body.length + " bytes to " + _URL);
+        
+        if (_JSONPEnabled)
+        {
+            var request = [CPURLRequest requestWithURL:_URL + separator + "body=" + body];
+            
+            _activeConnection = [[CPJSONPConnection alloc] initWithRequest:request callback:"callback" delegate:self startImmediately:YES];
+        }
+        else
+        {
+            var request = [CPURLRequest requestWithURL:_URL + separator + "base64=true"];
+            [request setHTTPBody:body];
+            [request setHTTPMethod:"POST"];
+            
+            _activeConnection = [[CPURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES];
+        }
 
         _timeoutTimer = [CPTimer scheduledTimerWithTimeInterval:DefaultTimeout target:self selector:@selector(connectionTimedOut) userInfo:nil repeats:NO];
-        _activeConnection = [[CPJSONPConnection alloc] initWithRequest:request callback:"callback" delegate:self startImmediately:YES];
+
+        CPLog.info("THTTPTransport: Sent " + body.length + " bytes to " + _URL + " via " + (_JSONPEnabled ? "JSONP" : "POST") + ".");
     }
 }
 
-- (void)connection:(CPJSONPConnection)connection didReceiveData:(CPString)data
+- (void)connection:(id)connection didReceiveData:(CPString)data
 {
     var error = nil;
 
-    CPLog.info("TJSONPTransport: Received " + data.length + " bytes from " + _URL);
+    CPLog.info("THTTPTransport: Received " + data.length + " bytes from " + _URL);
 
     if (data != nil && [data length] > 0)
     {
@@ -131,7 +176,7 @@ function URLSafeBase64DecodeToArray(str)
     [self performCallbackWithError:error];    
 }
 
-- (void)connection:(CPURLConnection)connection didFailWithError:(id)error
+- (void)connection:(id)connection didFailWithError:(id)error
 {
     _activeConnection = nil;
     [_timeoutTimer invalidate];

@@ -133,6 +133,13 @@ function URLSafeBase64DecodeToArray(str)
             [request setHTTPBody:body];
             [request setHTTPMethod:"POST"];
             
+            // When doing cross-site HTTP requests, we want to remove any unnecessary HTTP headers so the
+            // request won't need to be "pre-flighted".  Mozilla explains it well here:
+            // https://developer.mozilla.org/En/HTTP_access_control
+            [[request allHTTPHeaderFields] removeAllObjects];
+            
+            [request setValue:"text/plain" forHTTPHeaderField:"Content-Type"];
+            
             _activeConnection = [[CPURLConnection alloc] initWithRequest:request delegate:self startImmediately:YES];
         }
 

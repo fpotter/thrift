@@ -1965,7 +1965,7 @@ string t_cappuccino_generator::type_name(t_type* ttype, bool class_ref) {
     // Check for prefix
     t_program* program = ttype->get_program();
     if (program != NULL) {
-      result = program->get_namespace("cocoa") + ttype->get_name();
+      result = program->get_namespace("cappuccino") + ttype->get_name();
     } else {
       result = ttype->get_name();
     }

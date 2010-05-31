@@ -49,9 +49,9 @@ function URLSafeBase64DecodeToArray(str)
 }
 
 /*!
-    If set to YES, the request will following the JSONP pattern.  It will be an HTTP GET and
-    the request body will be appending with body=<url-safe-base64 encoded body> and there will be
-    a 'callback' parameter specifying the JS function to be called.
+    If set to YES, the request will follow the JSONP pattern.  It will be an HTTP GET and
+    the request body will be appended with body=<url-safe-base64 encoded body> and there will be
+    a 'callback' parameter specifying the name of the JS function to be called.
     
     If set to NO, the request will be an HTTP POST with the request body enoded as url-safe-base64.
     There will be an added 'base64=true' parameter so the server knows the format.

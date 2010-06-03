@@ -106,8 +106,6 @@
         [protocol writeI32:input];
         var output = [protocol readI32];
         
-        //print([CPString stringWithFormat:"input: %X output: %X", input, output]);
-        
         if (input != output)
         {
             [self fail:"We should get the same thing back that we put in. [ Sent " + input + ", Recv " + output + "]"];            
@@ -138,11 +136,11 @@
         }
     }
     
-    var testValues = [];
+    var testValues = [ ];
     
-    for (var i = 0; i < 62; i++)
+    for (var i = 0; i < 56; i++)
     {
-        testValues.push(1 << i);
+        testValues.push(Math.pow(2, i));
     }
     
     for (var i = 0; i < testValues.length; i++)
@@ -238,7 +236,7 @@
         {
             var result = [protocol readByte];
             
-            [self assert:result equals:input message:"Should get back what we put in."];
+            [self assert:input equals:result message:"Should get back what we put in."];
         };
 
         var testCase = [[StructFieldTestCase alloc] initWithType:TType_BYTE fieldID:15 writeFunction:writeFunction readFunction:readFunction];
@@ -266,7 +264,7 @@
         {
             var result = [protocol readI16];
             
-            [self assert:result equals:input message:"Should get back what we put in."];
+            [self assert:input equals:result message:"Should get back what we put in."];
         };
 
         var testCase = [[StructFieldTestCase alloc] initWithType:TType_I16 fieldID:15 writeFunction:writeFunction readFunction:readFunction];
@@ -323,20 +321,20 @@
         var readFunction = function(protocol)
         {
             var result = [protocol readI64];
-            
-            [self assert:result equals:input message:"Should get back what we put in."];
+
+            [self assert:input equals:result message:"Should get back what we put in."];
         };
 
-        var testCase = [[StructFieldTestCase alloc] initWithType:TType_I32 fieldID:15 writeFunction:writeFunction readFunction:readFunction];
+        var testCase = [[StructFieldTestCase alloc] initWithType:TType_I64 fieldID:15 writeFunction:writeFunction readFunction:readFunction];
         
         [self _testStructFieldHelper:testCase];
     }
     
-    var testValues = [];
+    var testValues = [ ];
     
-    for (var i = 0; i < 62; i++)
+    for (var i = 0; i < 56; i++)
     {
-        testValues.push(1 << i);
+        testValues.push(Math.pow(2, i));
     }
     
     for (var i = 0; i < testValues.length; i++)

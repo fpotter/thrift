@@ -114,40 +114,38 @@ var VERSION_MASK = 0xffff0000;
 
 - (void)writeI64:(long)value
 {
-    var buf = [
-        (value & 0xff00000000000000) >> 56,
-        (value & 0x00ff000000000000) >> 48,
-        (value & 0x0000ff0000000000) >> 40,
-        (value & 0x000000ff00000000) >> 32,
-        (value & 0x00000000ff000000) >> 24,
-        (value & 0x0000000000ff0000) >> 16,
-        (value & 0x000000000000ff00) >> 8,
-        (value & 0x00000000000000ff)
-    ]
+    var hi = value / Math.pow(2, 32);
+    var lo = value & 0xffffffffff;
     
+    var buf = [
+        (hi & 0xff000000) >> 24,
+        (hi & 0x00ff0000) >> 16,
+        (hi & 0x0000ff00) >> 8,
+        (hi & 0x000000ff),
+        (lo & 0xff000000) >> 24,
+        (lo & 0x00ff0000) >> 16,
+        (lo & 0x0000ff00) >> 8,
+        (lo & 0x000000ff)
+    ]
+
     [_transport write:buf offset:0 length:8];
 }
 
 - (int)readI64
 {
     var buf = [ -1, -1, -1, -1, -1, -1, -1, -1 ];
-    
+
     [_transport readAll:buf offset:0 length:8];
     
-    var value =
-        (buf[0] << 56) | 
-        (buf[1] << 48) | 
-        (buf[2] << 40) | 
-        (buf[3] << 32) |
-        (buf[4] << 24) | 
-        (buf[5] << 16) | 
-        (buf[6] << 8) | 
-        (buf[7]);
-
-    if (value > 0x7fffffffffffffff)
-    {
-        value = 0 - ((value - 1) ^ 0xffffffffffffffff);
-    }
+    var value = 0;
+    value = (value * 256) + (buf[0] & 0xff);
+    value = (value * 256) + (buf[1] & 0xff);
+    value = (value * 256) + (buf[2] & 0xff);
+    value = (value * 256) + (buf[3] & 0xff);
+    value = (value * 256) + (buf[4] & 0xff);
+    value = (value * 256) + (buf[5] & 0xff);
+    value = (value * 256) + (buf[6] & 0xff);
+    value = (value * 256) + (buf[7] & 0xff);
         
     return value;
 }

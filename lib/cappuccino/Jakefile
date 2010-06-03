@@ -24,8 +24,9 @@ task ("test", function()
     
     var tests = new jake.FileList('Tests/**/*Test.j');
     var cmd = ["ojtest"].concat(tests.items());
-
-    var code = OS.system(cmd.map(OS.enquote).join(" "));
+    
+    // We shove Framework in our include path so that the <Thrift/Thrift.j> import works
+    var code = OS.system("OBJJ_INCLUDE_PATHS=`pwd`/Framework " + cmd.map(OS.enquote).join(" "));
     if (code !== 0)
     {
         OS.exit(code);

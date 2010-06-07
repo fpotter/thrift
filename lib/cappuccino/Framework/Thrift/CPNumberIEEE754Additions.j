@@ -1,6 +1,7 @@
-
-// http://babbage.cs.qc.edu/IEEE-754/64bit.html
-
+/*
+ Javascript implementations of IEEE-754 were found at:
+ http://babbage.cs.qc.edu/IEEE-754/64bit.html
+*/
 /*
   Copyright (c) 2003, City University of New York
   All rights reserved.
@@ -1160,7 +1161,7 @@ function ieee (Size){
     }
 }
 
-@implementation CPNumber (Additions)
+@implementation CPNumber (IEEE754_Additions)
 
 + (id)numberWithDoubleInHex:(CPString)hex
 {

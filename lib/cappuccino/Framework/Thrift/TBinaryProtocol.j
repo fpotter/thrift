@@ -1,7 +1,7 @@
 
 @import <Foundation/Foundation.j>
 @import "TProtocol.j"
-@import "CPNumber+IEEE754.j"
+@import "CPNumberIEEE754Additions.j"
 
 var VERSION_1 = 0x80010000;
 var VERSION_MASK = 0xffff0000;

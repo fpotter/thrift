@@ -1,0 +1,60 @@
+Thrift Cappuccino Software Library
+
+License
+=======
+
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements. See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership. The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License. You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied. See the License for the
+specific language governing permissions and limitations
+under the License.
+
+
+Installing
+==========
+
+Run "jake install" to copy the Thrift framework to your
+local narwhal packages directory (usually ~/narwhal/packages).
+
+
+Using Thrift with your Cappuccino Application
+=============================================
+
+To copy the framework to your project's directory, run the
+following in your project's directory:
+
+  capp gen -f -F thrift .
+  
+NOTE: You'll see "Warning: Couldn't find debug framework Thrift"
+which you can safely ignore.
+
+For an example of usage, see the cappuccino tutorial under
+'tutorial/cappuccino'.
+
+
+Server Requirements
+===================
+
+Because Javascript has no support for binary data types, the
+included THTTPTransport expects to communicate via url-safe
+base64 (see: http://en.wikipedia.org/wiki/Base64#URL_applications)
+
+THTTPTransport will send the URL parameter base64=true so the
+server knows it should decode the request with base64 and 
+encode the response with base64.
+
+Existing Thrift HTTP servers will have to be slightly modified
+to accommodate this.  For an example server, see 'server.rb' 
+under 'tutorial/cappuccino'.
+

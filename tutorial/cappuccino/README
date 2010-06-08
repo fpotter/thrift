@@ -1,0 +1,22 @@
+
+= Requirements =
+
+    1. Install the Thrift/Cappuccino Framework (i.e. 'jake install' under lib/cappuccino)
+    2. Sinatra Ruby Gem (just for the tutorial server)
+
+= Before you Run =
+
+    You'll need to copy in the Cappuccino and Thrift frameworks, and
+    generate the tutorial thrift code
+
+    Do:
+        cd public
+        capp gen -f -F Thrift .
+        thrift -gen cappuccino ../../shared.thrift
+        thrift -gen cappuccino ../../tutorial.thrift
+
+= Running =
+
+    1. Run ./server.rb
+    2. Open http://localhost:4567 in your browser
+ 

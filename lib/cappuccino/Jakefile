@@ -1,0 +1,43 @@
+var FILE = require("file"),
+    SYSTEM = require("system"),
+    OS = require("os"),
+    jake = require("jake"),
+    task = jake.task,
+    stream = require("term").stream;
+
+task ("test", function()
+{
+    var thriftFiles = [ '../../test/DebugProtoTest.thrift' ];
+    
+    for (var i = 0; i < thriftFiles.length; i++)
+    {
+        var file = thriftFiles[i];
+        var code = OS.system("../../compiler/cpp/thrift -gen cappuccino " + file);
+        
+        if (code != 0)
+        {
+            print("Failed to generate code from thrift file: " + file);
+            print("Did you build the Thrift compiler first?");
+            OS.exit(code);
+        }
+    }
+    
+    var tests = new jake.FileList('Tests/**/*Test.j');
+    var cmd = ["ojtest"].concat(tests.items());
+    
+    // We shove Framework in our include path so that the <Thrift/Thrift.j> import works
+    var code = OS.system("OBJJ_INCLUDE_PATHS=`pwd`/Framework " + cmd.map(OS.enquote).join(" "));
+    if (code !== 0)
+    {
+        OS.exit(code);
+    }
+});
+
+task ("install", function()
+{
+    if (OS.system(["tusk", "install", "--force", "."])) {
+        stream.print("\0red(Installation failed, possibly because you do not have permissions.\0)");
+        stream.print("\0red(Try re-running using '\0yellow(jake sudo-install\0)'.\0)");
+        OS.exit(1);
+    }
+});

@@ -108,6 +108,7 @@ const int struct_is_union = 1;
 %token tok_smalltalk_category
 %token tok_smalltalk_prefix
 %token tok_cocoa_prefix
+%token tok_cappuccino_prefix
 %token tok_csharp_namespace
 
 /**
@@ -365,6 +366,15 @@ Header:
       pdebug("Header -> tok_cocoa_prefix tok_identifier");
       if (g_parse_mode == PROGRAM) {
         g_program->set_namespace("cocoa", $2);
+      }
+    }
+/* TODO(dreiss): Get rid of this once everyone is using the new hotness. */
+| tok_cappuccino_prefix tok_identifier
+    {
+      pwarning(1, "'cappuccino_prefix' is deprecated. Use 'namespace cappuccino' instead");
+      pdebug("Header -> tok_cappuccino_prefix tok_identifier");
+      if (g_parse_mode == PROGRAM) {
+        g_program->set_namespace("cappuccino", $2);
       }
     }
 /* TODO(dreiss): Get rid of this once everyone is using the new hotness. */

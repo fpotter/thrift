@@ -1,0 +1,10 @@
+{
+    "name": "thrift",
+    "dependencies": ["narwhal"],
+    "author": "Fred Potter (http://github.com/fpotter/)",
+    "contributors": [],
+    "description": "Thrift Bindings for Cappuccino",
+    "keywords": ["thrift"],
+    "objj-frameworks": ["Framework"],
+    "version":"0.1.0"
+}

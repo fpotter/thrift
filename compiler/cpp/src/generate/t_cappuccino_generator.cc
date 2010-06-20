@@ -1884,7 +1884,7 @@ string t_cappuccino_generator::decontainerize(t_field * tfield,
     case t_base_type::TYPE_BOOL:
       return "[" + fieldName + " boolValue]";
     case t_base_type::TYPE_BYTE:
-      return "[" + fieldName + " unsignedCharValue]";
+      return "[" + fieldName + " unsignedIntValue]";
     case t_base_type::TYPE_I16:
       return "[" + fieldName + " shortValue]";
     case t_base_type::TYPE_I32:
@@ -2296,20 +2296,20 @@ string t_cappuccino_generator::format_string_for_type(t_type* type) {
     case t_base_type::TYPE_STRING:
       return "\\\"%@\\\"";
     case t_base_type::TYPE_BOOL:
-      return "%i";
+      return "%d";
     case t_base_type::TYPE_BYTE:
-      return "%i";
+      return "%d";
     case t_base_type::TYPE_I16:
-      return "%hi";
+      return "%d";
     case t_base_type::TYPE_I32:
-      return "%i";
+      return "%d";
     case t_base_type::TYPE_I64:
-      return "%qi";
+      return "%d";
     case t_base_type::TYPE_DOUBLE:
       return "%f";
     }
   } else if (type->is_enum()) {
-    return "%i";
+    return "%d";
   } else if (type->is_struct() || type->is_xception()) {
     return "%@";
   } else if (type->is_map()) {

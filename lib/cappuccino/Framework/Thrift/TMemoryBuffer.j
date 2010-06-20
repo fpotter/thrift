@@ -41,7 +41,7 @@
     {
         for (var i = 0; i < length; i++)
         {
-            buffer[offset + i] = _bytes[_readPosition++];
+            buffer[offset + i] = _bytes[_readPosition++] & 0xff;
         }
     }
 }

@@ -88,7 +88,7 @@ function URLSafeBase64DecodeToArray(str)
     {
         for (var i = 0; i < length; i++)
         {
-            buffer[offset + i] = _responseData[_responsePosition++];
+            buffer[offset + i] = _responseData[_responsePosition++] & 0xff;
         }
     }
 }

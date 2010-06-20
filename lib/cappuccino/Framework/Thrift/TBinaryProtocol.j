@@ -55,7 +55,7 @@ var VERSION_MASK = 0xffff0000;
 }
 
 - (void)writeI16:(short)value
-{
+{   
     var buf = [
         (value & 0xff00) >> 8,
         (value & 0xff)
@@ -114,7 +114,9 @@ var VERSION_MASK = 0xffff0000;
 
 - (void)writeI64:(long)value
 {
-    var hi = value / Math.pow(2, 32);
+    // We have to use division to bitshift since JS bitwise
+    // operators don't work over 32 bits
+    var hi = Math.floor(value / Math.pow(2, 32));
     var lo = value & 0xffffffffff;
     
     var buf = [
@@ -136,17 +138,38 @@ var VERSION_MASK = 0xffff0000;
     var buf = [ -1, -1, -1, -1, -1, -1, -1, -1 ];
 
     [_transport readAll:buf offset:0 length:8];
-    
-    var value = 0;
-    value = (value * 256) + (buf[0] & 0xff);
-    value = (value * 256) + (buf[1] & 0xff);
-    value = (value * 256) + (buf[2] & 0xff);
-    value = (value * 256) + (buf[3] & 0xff);
-    value = (value * 256) + (buf[4] & 0xff);
-    value = (value * 256) + (buf[5] & 0xff);
-    value = (value * 256) + (buf[6] & 0xff);
-    value = (value * 256) + (buf[7] & 0xff);
-        
+
+    var isNegative = (buf[0] & 0x80);
+
+    value = 0;
+
+    if (isNegative)
+    {
+        // Flip the bits to get the 1's complement.  Because JS bitwise
+        // operators only work on the lower 32 bits, we do this byte by byte
+        for (var i = 0; i < 8; i++)
+        {
+            buf[i] = (~buf[i] & 0xff);
+        }
+    }
+
+    // We have to use multiplication to bitshift
+    // because << would only work on the lower 32 bits
+    value = (value * 256) + buf[0];
+    value = (value * 256) + buf[1];
+    value = (value * 256) + buf[2];
+    value = (value * 256) + buf[3];
+    value = (value * 256) + buf[4];
+    value = (value * 256) + buf[5];
+    value = (value * 256) + buf[6];
+    value = (value * 256) + buf[7];
+
+    if (isNegative)
+    {
+        // Finish two's complement
+        value = -(value + 1);
+    }
+
     return value;
 }
 

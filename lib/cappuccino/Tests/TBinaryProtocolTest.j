@@ -52,7 +52,7 @@
     [super setUp];
     
     // Show pretty stack traces
-//    objj_msgSend_decorate(objj_backtrace_decorator);
+    //objj_msgSend_decorate(objj_backtrace_decorator);
     
 }
 
@@ -138,9 +138,10 @@
     
     var testValues = [ ];
     
-    for (var i = 0; i < 56; i++)
+    for (var i = 0; i < 53; i++)
     {
         testValues.push(Math.pow(2, i));
+        testValues.push(-Math.pow(2, i));
     }
     
     for (var i = 0; i < testValues.length; i++)
@@ -464,6 +465,8 @@
 
 - (void)testSerialization
 {
+    
+    
     [self _testSerializationHelper:[OneOfEach class] instance:[self fixtureForOneOfEach]];
     [self _testSerializationHelper:[Nesting class] instance:[self fixtureForNesting]];
     [self _testSerializationHelper:[HolyMoley class] instance:[self fixtureForHolyMoley]];
@@ -507,16 +510,16 @@
         a_bite:(0x42)
         integer16:27000 
         integer32:(1 << 24)
-        integer64:6000 * 1000 * 1000
+        integer64:(1276994131000)
         double_precision:3.14
         some_characters:"JSON THIS!"
         zomg_unicode:"This should be some unicode"
         what_who:YES
         base64:[CPData dataWithRawString:"blah"]
-        byte_list:[0, 1, 2, 3]
+        byte_list:[0, 1, 2, 3, 4, 5]
         i16_list:[0, 1, 2, 3, 4]
         i64_list:[0, 1, 2, 3, 5]];
-    
+
     return oneOfEach;
 }
 

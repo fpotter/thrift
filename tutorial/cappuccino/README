@@ -15,6 +15,13 @@
         thrift -gen cappuccino ../../shared.thrift
         thrift -gen cappuccino ../../tutorial.thrift
 
+    Also, in the top-level tutorial directory, generate the
+    ruby thrift code with:
+    
+        cd path/to/thrift/tutorial
+        thrift -gen rb shared.thrift
+        thrift -gen rb tutorial.thrift
+
 = Running =
 
     1. Run ./server.rb
